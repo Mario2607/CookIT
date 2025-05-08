@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CookIT - Gesunde Rezepte finden</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #f75c2f;
+      --primary-hover: #e24c20;
+      --bg-light: #fff7f3;
+    }
+
+    body {
+      background-color: var(--bg-light);
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .navbar-brand span {
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-outline-light {
+      border-color: white;
+      color: white;
+    }
+
+    .btn-outline-light:hover {
+      background-color: white;
+      color: var(--primary-color);
+    }
+
+    .card-header {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 5rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header mit Logo und Login -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="Downloads/Logo.png" alt="CookIT Logo" width="40" height="40" class="me-2">
+        <span>CookIT</span>
+      </a>
+      <a class="btn btn-outline-light" href="login.html">Login</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Filterbereich -->
+    <div class="card mb-4">
+      <div class="card-header">Filteroptionen</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Allergien:</label>
+            <select class="form-select" id="allergy-filter">
+              <option value="">Keine Auswahl</option>
+              <option value="nuts">Nüsse</option>
+              <option value="lactose">Laktose</option>
+              <option value="gluten">Gluten</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Ernährungsform:</label>
+            <select class="form-select" id="diet-filter">
+              <option value="">Keine Auswahl</option>
+              <option value="vegan">Vegan</option>
+              <option value="vegetarian">Vegetarisch</option>
+              <option value="gluten_free">Glutenfrei</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Favoriten anzeigen:</label>
+            <select class="form-select" id="favorite-filter">
+              <option value="">Alle Rezepte</option>
+              <option value="favorites">Nur Favoriten</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-success w-100" onclick="filterRecipes()">Filtern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rezeptliste -->
+    <div id="recipe-list" class="row">
+      <!-- Rezepte werden hier per JavaScript eingefügt -->
+    </div>
+  </div>
+
+  <footer class="text-center">
+    <p>Finde dein perfektes Rezept</p>
+  </footer>
+
+  <script>
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || {};
+
+    function fetchRecipes(filters = {}) {
+      const baseUrl = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
+      fetch(baseUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data.meals) {
+            let filteredMeals = data.meals;
+
+            // Ernährungsform
+            if (filters.diet === 'vegan') {
+              filteredMeals = filteredMeals.filter(isVegan);
+            } else if (filters.diet === 'vegetarian') {
+              filteredMeals = filteredMeals.filter(isVegetarian);
+            } else if (filters.diet === 'gluten_free') {
+              filteredMeals = filteredMeals.filter(isGlutenFree);
+            }
+
+            // Allergie (vereinfachte Prüfung)
+            if (filters.allergy === 'nuts') {
+              filteredMeals = filteredMeals.filter(recipe => !hasIngredient(recipe, ['nut', 'nuts', 'almond', 'hazelnut']));
+            } else if (filters.allergy === 'lactose') {
+              filteredMeals = filteredMeals.filter(recipe => !hasIngredient(recipe, ['milk', 'cheese', 'cream', 'butter', 'yogurt']));
+            } else if (filters.allergy === 'gluten') {
+              filteredMeals = filteredMeals.filter(recipe => !hasIngredient(recipe, ['wheat', 'flour', 'bread', 'pasta']));
+            }
+
+            // Favoritenfilter
+            if (filters.favorite === 'favorites') {
+              filteredMeals = filteredMeals.filter(recipe => favorites[recipe.idMeal]);
+            }
+
+            displayRecipes(filteredMeals);
+          }
+        });
+    }
+
+    function filterRecipes() {
+      const filters = {
+        allergy: document.getElementById("allergy-filter").value,
+        diet: document.getElementById("diet-filter").value,
+        favorite: document.getElementById("favorite-filter").value
+      };
+      fetchRecipes(filters);
+    }
+
+    function displayRecipes(recipes) {
+      const recipeList = document.getElementById("recipe-list");
+      recipeList.innerHTML = "";
+
+      recipes.forEach(recipe => {
+        const col = document.createElement("div");
+        col.className = "col-md-4 mb-4";
+
+        let ingredients = "";
+        for (let i = 1; i <= 20; i++) {
+          const ing = recipe[`strIngredient${i}`];
+          if (ing) ingredients += `<li>${ing}</li>`;
+          else break;
+        }
+
+        const favText = favorites[recipe.idMeal] ? "Entfernen aus Favoriten" : "Zu Favoriten hinzufügen";
+        const favClass = favorites[recipe.idMeal] ? "btn-danger" : "btn-success";
+
+        col.innerHTML = `
+          <div class="card h-100">
+            <img src="${recipe.strMealThumb}" class="card-img-top" alt="${recipe.strMeal}">
+            <div class="card-body">
+              <h5 class="card-title">${recipe.strMeal}</h5>
+              <h6>Zutaten:</h6>
+              <ul>${ingredients}</ul>
+              <button class="btn ${favClass} w-100" onclick="toggleFavorite('${recipe.idMeal}')">${favText}</button>
+            </div>
+          </div>
+        `;
+
+        recipeList.appendChild(col);
+      });
+    }
+
+    function toggleFavorite(recipeId) {
+      if (favorites[recipeId]) {
+        delete favorites[recipeId];
+      } else {
+        favorites[recipeId] = true;
+      }
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+      filterRecipes();
+    }
+
+    function hasIngredient(recipe, blockedTerms) {
+      for (let i = 1; i <= 20; i++) {
+        const ing = recipe[`strIngredient${i}`];
+        if (ing && blockedTerms.some(term => ing.toLowerCase().includes(term))) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function isVegan(recipe) {
+      const nonVegan = ['chicken', 'beef', 'pork', 'fish', 'egg', 'milk', 'cheese', 'honey', 'butter'];
+      return !hasIngredient(recipe, nonVegan);
+    }
+
+    function isVegetarian(recipe) {
+      const nonVeg = ['chicken', 'beef', 'pork', 'fish', 'lamb', 'bacon', 'anchovy', 'shrimp'];
+      return !hasIngredient(recipe, nonVeg);
+    }
+
+    function isGlutenFree(recipe) {
+      const gluten = ['wheat', 'flour', 'bread', 'pasta', 'barley', 'rye'];
+      return !hasIngredient(recipe, gluten);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchRecipes();
+    });
+  </script>
+</body>
+</html>
