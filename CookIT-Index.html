@@ -94,7 +94,6 @@
               <option value="">Keine Auswahl</option>
               <option value="vegan">Vegan</option>
               <option value="vegetarian">Vegetarisch</option>
-              <option value="gluten_free">Glutenfrei</option>
             </select>
           </div>
           <div class="col-md-4">
@@ -274,7 +273,7 @@
 
     // Vegetarisch-Check
     function isVegetarian(recipe) {
-      const nonVeg = ["chicken", "beef", "pork", "fish", "gelatin"];
+      const nonVeg = ["chicken", "beef", "pork", "fish", "gelatin", "sausages", "meat"];
       for (let i = 1; i <= 20; i++) {
         const ingredient = recipe[`strIngredient${i}`];
         if (ingredient && nonVeg.some((nv) => ingredient.toLowerCase().includes(nv))) {
