@@ -2,9 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CookIT Login</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     :root {
       --primary-color: #f75c2f;
@@ -18,6 +18,37 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      position: relative;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .logo-button {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .logo-button img {
+      height: 40px;
+      width: auto;
+      display: block;
+    }
+
+    .logo-button span {
+      margin-left: 0.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 1rem;
+      user-select: none;
+    }
+
+    .logo-button:hover span {
+      color: var(--primary-hover);
     }
 
     .login-card {
@@ -25,6 +56,8 @@
       max-width: 400px;
       border: none;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 0.5rem;
     }
 
     .login-header {
@@ -63,35 +96,44 @@
   </style>
 </head>
 <body>
+  <a href="CookIT-Index.html" class="logo-button" aria-label="Zurück zum Hauptmenü">
+    <img src="https://github.com/OliverDominikBorycki/BilderRepository/blob/main/Screenshot%202025-05-28%20132212.png?raw=true" alt="CookIT Logo" width="40" height="40" class="me-2" />
+    <span>Hauptmenü</span>
+  </a>
+
   <div class="card login-card">
-    <div class="login-header">
-      CookIT Login
-    </div>
+    <div class="login-header">Login</div>
     <div class="card-body">
       <form onsubmit="login(event)">
         <div class="mb-3">
           <label for="username" class="form-label">Benutzername</label>
-          <input type="text" class="form-control" id="username" required>
+          <input type="text" class="form-control" id="username" required />
         </div>
         <div class="mb-3">
           <label for="password" class="form-label">Passwort</label>
-          <input type="password" class="form-control" id="password" required>
+          <input type="password" class="form-control" id="password" required />
         </div>
         <button type="submit" class="btn btn-login w-100">Einloggen</button>
       </form>
-      <a href="register.html" class="btn btn-register w-100">Registrieren</a> <!-- Link zur Registrierungsseite -->
+      <a href="register-CookIT.html" class="btn btn-register w-100">Registrieren</a>
     </div>
   </div>
 
   <script>
     function login(event) {
       event.preventDefault();
-      const username = document.getElementById("username").value;
+      const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
 
-      if (username === "demo" && password === "passwort") {
+      const usersJSON = localStorage.getItem("users");
+      const users = usersJSON ? JSON.parse(usersJSON) : [];
+
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
         alert("Login erfolgreich!");
-        window.location.href = "index.html"; // Zur Hauptseite zurück
+        localStorage.setItem("loggedInUser", username);
+        window.location.href = "CookIT-Index.html";
       } else {
         alert("Falscher Benutzername oder Passwort!");
       }
